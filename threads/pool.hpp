@@ -7,11 +7,13 @@
 #include <thread>
 #include <vector>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
+
 struct ThreadPool {
  private:
-  using Mutex = std::mutex;
-  using Lock = std::unique_lock<Mutex>;
-  using ConditionVar = std::condition_variable;
+  using Mutex = absl::Mutex;
+  using Lock = absl::MutexLock;
 
   using Task = std::packaged_task<void()>;
   using TaskQueueAllocator = std::allocator<Task>;
@@ -36,10 +38,9 @@ struct ThreadPool {
 
   ~ThreadPool() {
     {
-      auto lock = Lock{mutex_};
+      Lock lock{&mutex_};
       shared_.is_active_ = false;
     }
-    worker_notifier_.notify_all();
 
     for (auto& thread : thread_pool_) {
       thread.join();
@@ -55,17 +56,15 @@ struct ThreadPool {
     auto future = new_task.get_future();
 
     {
-      auto lock = Lock{mutex_};
+      Lock lock{&mutex_};
       shared_.queue_.emplace(std::move(new_task));
     }
-    worker_notifier_.notify_one();
 
     return future;
   }
 
  private:
   ThreadContainer thread_pool_;
-  ConditionVar worker_notifier_;
 
   Mutex mutex_;
 
@@ -73,22 +72,24 @@ struct ThreadPool {
     TaskQueue queue_;
     bool is_active_{true};
   };
-  SharedData shared_;
+  SharedData shared_ ABSL_GUARDED_BY(mutex_);
+
+  bool worker_should_wake() ABSL_SHARED_LOCKS_REQUIRED(mutex_) {
+    return !shared_.is_active_ || !shared_.queue_.empty();
+  }
 
   void worker_loop() {
-    auto lock = Lock{mutex_};
     while (true) {
-      worker_notifier_.wait(lock, [this] {
-        return !shared_.is_active_ || !shared_.queue_.empty();
-      });
+      mutex_.Lock();
+      mutex_.Await(absl::Condition(this, &ThreadPool::worker_should_wake));
       if (!shared_.is_active_) {
+        mutex_.Unlock();
         return;
       }
       auto task = std::move(shared_.queue_.front());
       shared_.queue_.pop();
-      lock.unlock();
+      mutex_.Unlock();
       task();
-      lock.lock();
     }
   }
 };
