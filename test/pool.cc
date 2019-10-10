@@ -135,8 +135,8 @@ TEST(ThreadPool, ParallelEnqueue) {
 TEST(ThreadPool, StdFunctionAliveOutOfScope) {
   ThreadPool pool{1};
 
-  auto enqueue = [&pool](int retval){
-    std::function<int()> func1 = [retval]{return retval;};
+  auto enqueue = [&pool](int retval) {
+    std::function<int()> func1 = [retval] { return retval; };
     return pool.add_task(func1);
   };
   auto future1 = enqueue(1);
@@ -151,4 +151,19 @@ TEST(ThreadPool, StdFunctionAliveOutOfScope) {
   ASSERT_EQ(std::future_status::ready, status2);
   auto data2 = future2.get();
   EXPECT_EQ(2, data2);
+}
+
+TEST(ThreadPool, PoolDestructorWaits) {
+  std::future<int> future;
+  {
+    ThreadPool pool{1};
+    future = pool.add_task([] {
+      std::this_thread::sleep_for(std::chrono::milliseconds{25});
+      return 10;
+    });
+  }
+  auto status = future.wait_for(std::chrono::milliseconds{0});
+  ASSERT_EQ(std::future_status::ready, status);
+  auto data = future.get();
+  EXPECT_EQ(10, data);
 }
