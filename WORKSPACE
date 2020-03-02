@@ -10,6 +10,13 @@ http_archive(
 )
 
 http_archive(
+    name = "com_google_benchmark",
+    urls = ["https://github.com/google/benchmark/archive/v1.5.0.zip"],
+    sha256 = "2d22dd3758afee43842bb504af1a8385cccb3ee1f164824e4837c1c1b04d92a0",
+    strip_prefix = "benchmark-1.5.0",
+)
+
+http_archive(
     name = "com_google_absl",
     urls = ["https://github.com/abseil/abseil-cpp/archive/abea769b551f7a100f540967cb95debdb0080df8.zip"],
     sha256 = "6f367c8643e69f5b53444c49400ed21d11f09f76c5af99e36181248ad333410a",
