@@ -15,3 +15,10 @@ cc_test(
     linkopts = ["-pthread"],
     size = "small",
 )
+
+cc_test(
+    name = "logger",
+    srcs = ["logger.cc"],
+    deps = ["//threads:logger", "@com_google_googletest//:gtest_main"],
+    size = "small",
+)

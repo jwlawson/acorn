@@ -7,3 +7,9 @@ cc_library(
     deps = ["@com_google_absl//absl/synchronization"],
     visibility = ["//visibility:public"],
 )
+cc_library(
+    name = "logger",
+    srcs = ["logger.h"],
+    deps = ["@com_google_absl//absl/synchronization"],
+    visibility = ["//visibility:public"],
+)
