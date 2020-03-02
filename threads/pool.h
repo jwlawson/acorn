@@ -85,7 +85,7 @@ struct ThreadPool {
       queue_.pop();
       mutex_.Unlock();
       if (!task.valid()) {
-        // Invalid task signals the thread pool is shutting down.
+        // An invalid task signals the thread pool is shutting down.
         break;
       }
       task();

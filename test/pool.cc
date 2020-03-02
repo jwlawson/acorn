@@ -1,7 +1,7 @@
 
 #include "gtest/gtest.h"
 
-#include "threads/pool.hpp"
+#include "threads/pool.h"
 
 #include <chrono>
 
