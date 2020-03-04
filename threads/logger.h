@@ -74,9 +74,9 @@ struct BufferedWriter final : Writer {
 
  private:
   Writer* base_writer_;
-  Mutex mutex_;
-  std::ostringstream buffer_ ABSL_GUARDED_BY(mutex_) = {};
-  int buffered_logs_ ABSL_GUARDED_BY(mutex_) = 0;
+  Mutex mutex_{};
+  std::ostringstream buffer_{} ABSL_GUARDED_BY(mutex_);
+  int buffered_logs_{0} ABSL_GUARDED_BY(mutex_);
 
   void write_buffer_to_base() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     for (int i = 0; i < buffered_logs_; ++i) {
