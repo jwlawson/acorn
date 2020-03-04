@@ -1,0 +1,45 @@
+# Address sanitizer
+# --config=asan
+build:asan --strip=never
+build:asan --copt=-g
+build:asan --copt=-fsanitize=address
+build:asan --copt=-DADDRESS_SANITIZER
+build:asan --copt=-fno-omit-frame-pointer
+build:asan --linkopt=-fsanitize=address
+build:asan --compilation_mode=dbg
+
+# Thread sanitizer
+# --config tsan
+build:tsan --strip=never
+build:tsan --copt=-g
+build:tsan --copt=-fsanitize=thread
+build:tsan --copt=-DTHREAD_SANITIZER
+build:tsan --copt=-DDYNAMIC_ANNOTATIONS_ENABLED=1
+build:tsan --copt=-DDYNAMIC_ANNOTATIONS_EXTERNAL_IMPL=1
+build:tsan --copt=-fno-omit-frame-pointer
+build:tsan --linkopt=-fsanitize=thread
+build:tsan --compilation_mode=dbg
+test:tsan --test_env="TSAN_OPTIONS=report_atomic_races=0"
+
+# Memory sanitizer
+# --config msan
+# Note: This can cause false positives if c++ std library is not instrumented
+build:msan --strip=never
+build:msan --copt=-g
+build:msan --copt=-fsanitize=memory
+build:msan --copt=-DADDRESS_SANITIZER
+build:msan --copt=-fno-omit-frame-pointer
+build:msan --copt=-fsanitize-memory-track-origins
+build:msan --linkopt=-fsanitize=memory
+build:msan --compilation_mode=dbg
+test:msan --test_env="ASAN_SYMBOLIZER_PATH=llvm-symbolizer"
+
+# Undefined Behavior Sanitizer
+# --config ubsan
+build:ubsan --strip=never
+build:ubsan --copt=-g
+build:ubsan --copt=-fsanitize=undefined
+build:ubsan --copt=-fno-omit-frame-pointer
+build:ubsan --linkopt=-fsanitize=undefined
+build:ubsan --linkopt=-lubsan
+build:ubsan --compilation_mode=dbg
