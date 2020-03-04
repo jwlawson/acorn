@@ -62,18 +62,15 @@ struct ThreadPool {
     using TypedTask = std::packaged_task<Return()>;
 
     auto new_task = TypedTask{std::move(func)};
-    return add_task(std::move(new_task));
+    auto future = new_task.get_future();
+    add_task(std::move(new_task));
+    return future;
   }
 
   template <typename ReturnType>
-  auto add_task(std::packaged_task<ReturnType()>&& task)
-      -> std::future<ReturnType> {
-    auto future = task.get_future();
-    {
-      Lock lock{&mutex_};
-      queue_.emplace(std::move(task));
-    }
-    return future;
+  void add_task(std::packaged_task<ReturnType()>&& task) {
+    Lock lock{&mutex_};
+    queue_.emplace(std::move(task));
   }
 
  private:

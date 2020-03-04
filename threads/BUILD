@@ -21,5 +21,6 @@ cc_library(
     deps = [
         ":pool",
         "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
