@@ -37,3 +37,13 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "slot_map",
+    size = "small",
+    srcs = ["slot_map.cc"],
+    deps = [
+        "//container:slot_map",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
