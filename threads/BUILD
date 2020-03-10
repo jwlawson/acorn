@@ -20,7 +20,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":pool",
-        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/synchronization",
     ],
 )

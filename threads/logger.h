@@ -16,7 +16,10 @@ struct LogEntry {
       : message_builder_{}, writer_{writer} {
     add_prefix_to_message(filename, line_no);
   }
-  ~LogEntry() { writer_->write(message_builder_.str()); }
+  ~LogEntry() {
+    message_builder_ << "\n";
+    writer_->write(message_builder_.str());
+  }
 
   template <typename T>
   LogEntry& operator<<(T const& t) {
@@ -46,7 +49,7 @@ struct StreamWriter final : Writer {
 
   void write(absl::string_view str) override {
     Lock lock{&mutex_};
-    os_ << str << std::endl;
+    os_ << str;
   }
 
  private:
@@ -62,21 +65,24 @@ struct BufferedWriter final : Writer {
 
  public:
   BufferedWriter(Writer* writer) : base_writer_{writer} {}
-  ~BufferedWriter() override { write_buffer_to_base(); }
+  ~BufferedWriter() override {
+    Lock lock{&mutex_};
+    write_buffer_to_base();
+  }
 
   void write(absl::string_view str) override {
-    Lock lock{&mutex_};
     buffer_ << str;
     if (++buffered_logs_ > BufferSize) {
+      Lock lock{&mutex_};
       write_buffer_to_base();
     }
   }
 
  private:
-  Writer* base_writer_;
   Mutex mutex_{};
-  std::ostringstream buffer_{} ABSL_GUARDED_BY(mutex_);
-  int buffered_logs_{0} ABSL_GUARDED_BY(mutex_);
+  Writer* base_writer_ ABSL_GUARDED_BY(mutex_);
+  std::ostringstream buffer_{};
+  int buffered_logs_{0};
 
   void write_buffer_to_base() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     for (int i = 0; i < buffered_logs_; ++i) {
