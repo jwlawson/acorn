@@ -64,22 +64,27 @@ struct SlotMap {
   SlotMap(SlotMap const&) = delete;
   SlotMap& operator=(SlotMap const&) = delete;
 
-  SlotMap(SlotMap &&) noexcept = default;
-  SlotMap& operator=(SlotMap &&) noexcept = default;
+  SlotMap(SlotMap&&) noexcept = default;
+  SlotMap& operator=(SlotMap&&) noexcept = default;
 
   /**
    * Insert a value into the slot map.
    *
+   * @tparam Type Universal reference type that should atch the underlying data
+   *         type stored in the slot map.
+   *
    * @param value [in] The value to insert in the map.
    * @return The index at which the value was inserted.
    */
-  size_t insert(T const& value) {
+  template <typename Type>
+  size_t insert(Type&& value) {
     if (++insert_index_ >= ChunkSize) {
       insert_chunk_ = get_new_chunk();
       insert_index_ = 0;
     }
     assert(insert_chunk_ != nullptr);
-    insert_chunk_->chunk_->operator[](insert_index_) = value;
+    insert_chunk_->chunk_->operator[](insert_index_) =
+        std::forward<Type>(value);
 
     if (CleanStrategy == CleanStrategyOpts::prefer_fast_erase) {
       clean_any_empty_chunks();
