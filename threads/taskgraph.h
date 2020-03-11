@@ -1,9 +1,9 @@
 
 
 #include "threads/pool.h"
+#include "container/slot_map.h"
 
 #include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
 #include <atomic>
@@ -71,7 +71,7 @@ struct TaskGraph {
     }
   };
 
-  using TaskMap = absl::flat_hash_map<size_t, InternalTask>;
+  using TaskMap = SlotMap<InternalTask>;
   using Mutex = absl::Mutex;
   using Lock = absl::MutexLock;
 
@@ -85,7 +85,11 @@ struct TaskGraph {
     using TypedTask = std::packaged_task<Return()>;
     constexpr size_t NumDeps = sizeof...(Deps);
 
-    size_t task_id = next_id();
+    size_t task_id;
+    {
+      Lock lock{&mutex_};
+      task_id = holding_queue_.insert(InternalTask{{}, NumDeps, {}});
+    }
 
     std::array<BaseTask, NumDeps> task_deps{deps...};
     for (auto&& dep : task_deps) {
@@ -105,15 +109,10 @@ struct TaskGraph {
       // task stored in the queue will be needed to track tasks depending on
       // this but won't contain information about the task itself.
       pool_.add_task(std::move(base_task));
-      task = InternalTask{{}, NumDeps, {}};
     } else {
       // The task has dependencies, so store the task in the holding queue
       // until they have been met.
-      task = InternalTask{std::move(base_task), NumDeps, {}};
-    }
-    {
-      Lock lock{&mutex_};
-      holding_queue_.emplace(std::make_pair(task_id, std::move(task)));
+      holding_queue_[task_id].function = std::move(base_task);
     }
 
     return {task_id, std::move(future)};
@@ -140,14 +139,13 @@ struct TaskGraph {
    */
   void task_complete(int id) {
     Lock lock{&mutex_};
-    auto finished_task_iter = holding_queue_.find(id);
-    auto& finished_task = finished_task_iter->second;
+    auto& finished_task = holding_queue_[id];
     for (auto&& task_id : finished_task.dependees) {
       auto& task = holding_queue_[task_id];
       if (--task.n_dependencies == 0) {
         pool_.add_task(std::move(task.function));
       }
     }
-    holding_queue_.erase(finished_task_iter);
+    holding_queue_.erase(id);
   }
 };
