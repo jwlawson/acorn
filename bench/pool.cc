@@ -29,7 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "threads/shared_thread_pool.h"
+#include "acorn/macros.h"
+#include "acorn/threads/shared_thread_pool.h"
 
 #include "benchmark/benchmark.h"
 
@@ -44,7 +45,7 @@ static void ManySmallTasks(::benchmark::State& state) {
   acorn::SharedThreadPool pool{n_threads};
   std::vector<std::future<void>> futures(n_tasks);
 
-  for ([[maybe_unused]] auto&& _ : state) {
+  for (ACORN_MAYBE_UNUSED auto&& _ : state) {
     for (int i = 0; i < n_tasks; ++i) {
       auto future = pool.add_task(
           [] { std::this_thread::sleep_for(std::chrono::nanoseconds{100}); });
@@ -65,7 +66,7 @@ static void FewLargeTasks(::benchmark::State& state) {
   std::vector<std::future<float>> futures(n_tasks);
   std::vector<float> data(n_values);
 
-  for ([[maybe_unused]] auto&& _ : state) {
+  for (ACORN_MAYBE_UNUSED auto&& _ : state) {
     for (int i = 0; i < n_tasks; ++i) {
       auto future = pool.add_task([&] {
         auto val = std::accumulate(begin(data), end(data), 0.1f);

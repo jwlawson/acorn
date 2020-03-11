@@ -5,7 +5,7 @@ cc_test(
     size = "small",
     srcs = ["pool.cc"],
     deps = [
-        "//threads:shared_thread_pool",
+        "//acorn/threads:shared_thread_pool",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -15,7 +15,7 @@ cc_test(
     size = "small",
     srcs = ["simple.cc"],
     linkopts = ["-pthread"],
-    deps = ["//threads:shared_thread_pool"],
+    deps = ["//acorn/threads:shared_thread_pool"],
 )
 
 cc_test(
@@ -23,7 +23,7 @@ cc_test(
     size = "small",
     srcs = ["logger.cc"],
     deps = [
-        "//threads:logger",
+        "//acorn/threads:logger",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -33,7 +33,7 @@ cc_test(
     size = "small",
     srcs = ["taskgraph.cc"],
     deps = [
-        "//threads:taskgraph",
+        "//acorn/threads:taskgraph",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -43,7 +43,7 @@ cc_test(
     size = "small",
     srcs = ["slot_map.cc"],
     deps = [
-        "//container:slot_map",
+        "//acorn/container:slot_map",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -32,7 +32,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "threads/logger.h"
+#include "acorn/threads/logger.h"
 
 #include <future>
 

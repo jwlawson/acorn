@@ -31,7 +31,7 @@
 
 #include "gtest/gtest.h"
 
-#include "threads/shared_thread_pool.h"
+#include "acorn/threads/shared_thread_pool.h"
 
 #include <chrono>
 

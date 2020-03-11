@@ -6,7 +6,8 @@ cc_test(
     srcs = ["pool.cc"],
     tags = ["benchmark"],
     deps = [
-        "//threads:shared_thread_pool",
+        "//acorn:macros",
+        "//acorn/threads:shared_thread_pool",
         "@com_google_benchmark//:benchmark_main",
     ],
 )

@@ -31,8 +31,8 @@
 #ifndef ACORN_THREADS_TASKGRAPH_H_
 #define ACORN_THREADS_TASKGRAPH_H_
 
-#include "container/slot_map.h"
-#include "threads/shared_thread_pool.h"
+#include "acorn/container/slot_map.h"
+#include "acorn/threads/shared_thread_pool.h"
 
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"

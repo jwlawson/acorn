@@ -28,49 +28,30 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef ACORN_MACROS_H_
+#define ACORN_MACROS_H_
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+/**
+ * @def ACORN_HAS_ATTRIBUTE(X)
+ * Check whether the compiler has access to the given c++ attribute.
+ */
+#if defined __has_cpp_attribute
+#define ACORN_HAS_ATTRIBUTE(X) __has_cpp_attribute(X)
+#else
+#define ACORN_HAS_ATTRIBUTE(X) 0
+#endif
 
-#include "acorn/container/slot_map.h"
+/**
+ * @def ACORN_MAYBE_UNUSED
+ * Attribute to specify that an entity may be unused and no warning should be
+ * raised if it is not used.
+ */
+#if ACORN_HAS_ATTRIBUTE(maybe_unused)
+#define ACORN_MAYBE_UNUSED [[maybe_unused]]
+#elif ACORN_HAS_ATTRIBUTE(gnu::unused)
+#define ACORN_MAYBE_UNUSED [[gnu::unused]]
+#else
+#define ACORN_MAYBE_UNUSED
+#endif
 
-#include <type_traits>
-
-static_assert(!std::is_copy_constructible<acorn::SlotMap<size_t>>::value,
-              "SlotMap should not be copiable, as that would require copying "
-              "all data stored in multiple chunks.");
-
-static_assert(!std::is_copy_assignable<acorn::SlotMap<size_t>>::value,
-              "SlotMap should not be copiable, as that would require copying "
-              "all data stored in multiple chunks.");
-
-static_assert(std::is_move_constructible<acorn::SlotMap<size_t>>::value,
-              "SlotMap should be move constructible.");
-
-static_assert(std::is_move_assignable<acorn::SlotMap<size_t>>::value,
-              "SlotMap should be move assignable.");
-
-TEST(SlotMap, InsertAndFetchElements) {
-  acorn::SlotMap<size_t> map;
-
-  for (size_t i = 0; i < 100; ++i) {
-    map.insert(i);
-  }
-  for (size_t i = 0; i < 100; ++i) {
-    ASSERT_EQ(map[i], i);
-  }
-}
-
-TEST(SlotMap, RemoveKeepsIndicesConsistent) {
-  acorn::SlotMap<size_t> map;
-
-  for (size_t i = 0; i < 100; ++i) {
-    map.insert(i);
-  }
-  for (size_t i = 0; i < 50; ++i) {
-    map.erase(i);
-  }
-  for (size_t i = 50; i < 100; ++i) {
-    ASSERT_EQ(map[i], i);
-  }
-}
+#endif  // ACORN_MACROS_H_

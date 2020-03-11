@@ -20,7 +20,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":shared_thread_pool",
-        "//container:slot_map",
+        "//acorn/container:slot_map",
         "@com_google_absl//absl/synchronization",
     ],
 )
