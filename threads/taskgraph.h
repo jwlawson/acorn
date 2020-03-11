@@ -1,7 +1,38 @@
+/*
+ * Copyright (c) 2020, John Lawson
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+#ifndef ACORN_THREADS_TASKGRAPH_H_
+#define ACORN_THREADS_TASKGRAPH_H_
 
-
-#include "threads/pool.h"
 #include "container/slot_map.h"
+#include "threads/shared_thread_pool.h"
 
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
@@ -14,6 +45,8 @@
 #include <queue>
 #include <thread>
 #include <vector>
+
+namespace acorn {
 
 struct TaskGraph {
   struct InternalTask {
@@ -77,8 +110,14 @@ struct TaskGraph {
 
  public:
   TaskGraph(unsigned n_threads = 8)
-      : pool_{n_threads}, mutex_{}, holding_queue_{}, last_id_{} {}
+      : pool_{n_threads}, mutex_{}, holding_queue_{} {}
 
+  /**
+   * Submit a task to be executed once its dependencies are fulfilled.
+   *
+   * @return A Task object containing both a task ID and a future for the task's
+   * returned value. This task can be used as a dependency for further tasks.
+   */
   template <typename Function, typename... Deps>
   auto submit(Function&& func, Deps const&... deps) -> Task<decltype(func())> {
     using Return = decltype(func());
@@ -99,11 +138,10 @@ struct TaskGraph {
       dep_task.dependees.push_back(task_id);
     }
 
-    auto base_task =
-        TypedTask{FuncWrapper<Function>{std::move(func), this, task_id}};
+    auto base_task = TypedTask{
+        FuncWrapper<Function>{std::forward<Function>(func), this, task_id}};
     auto future = base_task.get_future();
 
-    InternalTask task;
     if (NumDeps == 0) {
       // This task has no dependencies, so forward directly to the executor. The
       // task stored in the queue will be needed to track tasks depending on
@@ -119,18 +157,6 @@ struct TaskGraph {
   }
 
  private:
-  /** Executor to handle executing tasks. */
-  ThreadPool pool_;
-  /** Mutex guarding multi-threaded access to the task queue. */
-  Mutex mutex_;
-  /** Queue of all pending, queued and running tasks, indexed by their ID. */
-  TaskMap holding_queue_ ABSL_GUARDED_BY(mutex_);
-  /** The last task ID used in a task. */
-  size_t last_id_;
-
-  /** Get the next ID to use for a task. */
-  size_t next_id() { return ++last_id_; }
-
   /**
    * Mark the task with provided ID as complete.
    *
@@ -148,4 +174,15 @@ struct TaskGraph {
     }
     holding_queue_.erase(id);
   }
+
+  /** Executor to handle executing tasks. */
+  SharedThreadPool pool_;
+  /** Mutex guarding multi-threaded access to the task queue. */
+  Mutex mutex_;
+  /** Queue of all pending, queued and running tasks, indexed by their ID. */
+  TaskMap holding_queue_ ABSL_GUARDED_BY(mutex_);
 };
+
+}  // namespace acorn
+
+#endif  // ACORN_THREADS_TASKGRAPH_H_

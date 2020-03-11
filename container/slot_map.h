@@ -1,4 +1,35 @@
-#include "threads/logger.h"
+/*
+ * Copyright (c) 2020, John Lawson
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+#ifndef ACORN_CONTAINER_SLOT_MAP_H_
+#define ACORN_CONTAINER_SLOT_MAP_H_
 
 #include <array>
 #include <memory>
@@ -7,6 +38,8 @@
 #ifndef NDEBUG
 #include <type_traits>
 #endif
+
+namespace acorn {
 
 template <typename T>
 struct SlotMap {
@@ -136,12 +169,6 @@ struct SlotMap {
   }
 
  private:
-  Data data_;
-  size_t num_chunks_used_ = 0;
-  size_t first_chunk_offset_ = 0;
-  DataHolder* insert_chunk_ = nullptr;
-  size_t insert_index_ = ChunkSize;
-
   size_t compute_flat_index(size_t chunk_idx, size_t index_in_chunk) const
       noexcept {
     return chunk_idx * ChunkSize + index_in_chunk + first_chunk_offset_;
@@ -191,4 +218,20 @@ struct SlotMap {
     insert_chunk_ -= num_to_mark;
     first_chunk_offset_ += ChunkSize * num_to_mark;
   }
+
+  /** Vector of DataHolders pointing to the data chunks. */
+  Data data_;
+  /** Number of data chunks in use at this point in time. */
+  size_t num_chunks_used_ = 0;
+  /** Index offset of the first data chunk. */
+  size_t first_chunk_offset_ = 0;
+  /** A pointer to the chunk to insert the next value into. */
+  DataHolder* insert_chunk_ = nullptr;
+  /** Index into the chunk to insert the next value into. */
+  size_t insert_index_ = ChunkSize;
+
 };
+
+}  // namespace acorn
+
+#endif  // ACORN_CONTAINER_SLOT_MAP_H_

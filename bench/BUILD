@@ -6,7 +6,7 @@ cc_test(
     srcs = ["pool.cc"],
     tags = ["benchmark"],
     deps = [
-        "//threads:pool",
+        "//threads:shared_thread_pool",
         "@com_google_benchmark//:benchmark_main",
     ],
 )

@@ -5,7 +5,7 @@ cc_test(
     size = "small",
     srcs = ["pool.cc"],
     deps = [
-        "//threads:pool",
+        "//threads:shared_thread_pool",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -15,7 +15,7 @@ cc_test(
     size = "small",
     srcs = ["simple.cc"],
     linkopts = ["-pthread"],
-    deps = ["//threads:pool"],
+    deps = ["//threads:shared_thread_pool"],
 )
 
 cc_test(
