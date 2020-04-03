@@ -128,10 +128,13 @@ struct SharedThreadPool {
    * should exit the loop.
    */
   void worker_loop() ABSL_LOCKS_EXCLUDED(mutex_) {
+    using QueueLockPredicate = bool (*)(TaskQueue*);
     while (true) {
       mutex_.Lock();
-      mutex_.Await(absl::Condition{
-          +[](TaskQueue* queue) { return !queue->empty(); }, &queue_});
+      mutex_.Await(
+          absl::Condition{static_cast<QueueLockPredicate>(
+                              [](TaskQueue* queue) { return !queue->empty(); }),
+                          &queue_});
       auto task = std::move(queue_.front());
       queue_.pop();
       mutex_.Unlock();
