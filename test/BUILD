@@ -47,3 +47,33 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "tuple",
+    size = "small",
+    srcs = ["tuple.cc"],
+    deps = [
+        "//acorn/container:tuple",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "with_ref_matching",
+    size = "small",
+    srcs = ["with_ref_matching.cc"],
+    deps = [
+        "//acorn/traits",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "remove_const_ref",
+    size = "small",
+    srcs = ["remove_const_ref.cc"],
+    deps = [
+        "//acorn/traits",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
