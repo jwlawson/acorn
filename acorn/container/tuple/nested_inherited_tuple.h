@@ -28,11 +28,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef ACORN_CONTAINER_TUPLE_H_
-#define ACORN_CONTAINER_TUPLE_H_
+#ifndef ACORN_CONTAINER_TUPLE_NESTED_INHERITED_TUPLE_H_
+#define ACORN_CONTAINER_TUPLE_NESTED_INHERITED_TUPLE_H_
 
-#include "acorn/container/tuple/member_tuple.h"
-#include "acorn/container/tuple/nested_inherited_tuple.h"
+#include "acorn/container/tuple/tuple_element.h"
 
 #include "acorn/traits/remove_const_ref.h"
 #include "acorn/traits/with_ref_matching.h"
@@ -42,27 +41,37 @@
 
 namespace acorn {
 
-#ifdef ACORN_STANDARD_LAYOUT_TUPLE
-#define INLINE_MEMBER inline
-#define INLINE_NESTED_INHERITED
-#else
-#define INLINE_MEMBER
-#define INLINE_NESTED_INHERITED inline
-#endif
-
-INLINE_MEMBER namespace member {
 template <typename... Args>
-using Tuple = MemberTuple<Args...>;
-}
+struct NestedInheritedTuple {};
 
-INLINE_NESTED_INHERITED namespace nested_inherited {
-template <typename... Args>
-using Tuple = NestedInheritedTuple<Args...>;
-}
+template <typename First, typename... Rest>
+struct NestedInheritedTuple<First, Rest...> : NestedInheritedTuple<Rest...> {
+  template <typename FirstA, typename... RestA>
+  constexpr NestedInheritedTuple(FirstA&& arg1, RestA&&... args)
+      : NestedInheritedTuple<Rest...>{std::forward<RestA>(args)...},
+        arg_{std::forward<FirstA>(arg1)} {}
 
-#undef INLINE_MEMBER
-#undef INLINE_NESTED_INHERITED
+  constexpr NestedInheritedTuple() = default;
+  constexpr NestedInheritedTuple(NestedInheritedTuple&) = default;
+  constexpr NestedInheritedTuple(NestedInheritedTuple const&) = default;
+  constexpr NestedInheritedTuple(NestedInheritedTuple&&) = default;
+  NestedInheritedTuple& operator=(NestedInheritedTuple const&) = default;
+  NestedInheritedTuple& operator=(NestedInheritedTuple&&) = default;
+
+  First arg_;
+};
+
+template <std::size_t I, typename Tuple,
+          typename std::enable_if<std::is_base_of<NestedInheritedTuple<>,
+                                                  RemoveConstRef<Tuple>>::value,
+                                  int>::type = 0>
+constexpr WithRefMatching<TupleElementType<I, RemoveConstRef<Tuple>>, Tuple>
+get(Tuple&& tuple) noexcept {
+  using TupleType = typename TupleElement<I, RemoveConstRef<Tuple>>::TupleType;
+  using TupleRefType = WithRefMatching<TupleType, Tuple>;
+  return static_cast<TupleRefType>(tuple).arg_;
+}
 
 }  // namespace acorn
 
-#endif  // ACORN_CONTAINER_TUPLE_H_
+#endif  // ACORN_CONTAINER_TUPLE_NESTED_INHERITED_TUPLE_H_

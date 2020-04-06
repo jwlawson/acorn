@@ -9,7 +9,7 @@ cc_library(
 
 cc_library(
     name = "tuple",
-    srcs = ["tuple.h"],
+    srcs = ["tuple.h"] + glob(["tuple/*.h"]),
     visibility = ["//visibility:public"],
     deps = ["//acorn/traits"],
 )

@@ -32,12 +32,6 @@
 
 #include <gtest/gtest.h>
 
-namespace acorn {
-template<typename... Args>
-using Tuple = InheritedTuple<Args...>;
-//using Tuple = MemberTuple<Args...>;
-}  // namespace acorn
-
 static_assert(
     std::is_same<acorn::TupleElement<0, acorn::Tuple<int>>::type, int>::value,
     "First type of Tuple<int> should be int");
@@ -52,7 +46,7 @@ static_assert(
                  int>::value,
     "Second type of Tuple<float, int> should be int");
 
-#if 0
+#ifdef ACORN_STANDARD_LAYOUT_TUPLE
 static_assert(std::is_standard_layout<acorn::Tuple<int>>::value,
               "Tuple<int> should be standard layout");
 static_assert(std::is_standard_layout<acorn::Tuple<int, float>>::value,

@@ -28,11 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef ACORN_CONTAINER_TUPLE_H_
-#define ACORN_CONTAINER_TUPLE_H_
-
-#include "acorn/container/tuple/member_tuple.h"
-#include "acorn/container/tuple/nested_inherited_tuple.h"
+#ifndef ACORN_CONTAINER_TUPLE_TUPLE_ELEMENT_H_
+#define ACORN_CONTAINER_TUPLE_TUPLE_ELEMENT_H_
 
 #include "acorn/traits/remove_const_ref.h"
 #include "acorn/traits/with_ref_matching.h"
@@ -42,27 +39,29 @@
 
 namespace acorn {
 
-#ifdef ACORN_STANDARD_LAYOUT_TUPLE
-#define INLINE_MEMBER inline
-#define INLINE_NESTED_INHERITED
-#else
-#define INLINE_MEMBER
-#define INLINE_NESTED_INHERITED inline
-#endif
+template <std::size_t I, template <typename...> class Tuple, typename... Args>
+struct TupleElementImpl;
 
-INLINE_MEMBER namespace member {
-template <typename... Args>
-using Tuple = MemberTuple<Args...>;
-}
+template <std::size_t I, template <typename...> class Tuple, typename First,
+          typename... Rest>
+struct TupleElementImpl<I, Tuple, First, Rest...>
+    : TupleElementImpl<I - 1, Tuple, Rest...> {};
 
-INLINE_NESTED_INHERITED namespace nested_inherited {
-template <typename... Args>
-using Tuple = NestedInheritedTuple<Args...>;
-}
+template <template <typename...> class Tuple, typename First, typename... Rest>
+struct TupleElementImpl<0, Tuple, First, Rest...> {
+  using type = First;
+  using TupleType = Tuple<First, Rest...>;
+};
 
-#undef INLINE_MEMBER
-#undef INLINE_NESTED_INHERITED
+template <std::size_t I, typename Tuple>
+struct TupleElement;
+
+template <std::size_t I, template <typename...> class Tuple, typename... Args>
+struct TupleElement<I, Tuple<Args...>> : TupleElementImpl<I, Tuple, Args...> {};
+
+template <std::size_t I, typename Tuple>
+using TupleElementType = typename TupleElement<I, Tuple>::type;
 
 }  // namespace acorn
 
-#endif  // ACORN_CONTAINER_TUPLE_H_
+#endif  // ACORN_CONTAINER_TUPLE_TUPLE_ELEMENT_H_

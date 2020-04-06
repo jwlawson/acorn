@@ -28,11 +28,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef ACORN_CONTAINER_TUPLE_H_
-#define ACORN_CONTAINER_TUPLE_H_
+#ifndef ACORN_CONTAINER_TUPLE_MEMBER_TUPLE_H_
+#define ACORN_CONTAINER_TUPLE_MEMBER_TUPLE_H_
 
-#include "acorn/container/tuple/member_tuple.h"
-#include "acorn/container/tuple/nested_inherited_tuple.h"
+#include "acorn/container/tuple/tuple_element.h"
 
 #include "acorn/traits/remove_const_ref.h"
 #include "acorn/traits/with_ref_matching.h"
@@ -42,27 +41,55 @@
 
 namespace acorn {
 
-#ifdef ACORN_STANDARD_LAYOUT_TUPLE
-#define INLINE_MEMBER inline
-#define INLINE_NESTED_INHERITED
-#else
-#define INLINE_MEMBER
-#define INLINE_NESTED_INHERITED inline
-#endif
-
-INLINE_MEMBER namespace member {
 template <typename... Args>
-using Tuple = MemberTuple<Args...>;
-}
+struct MemberTuple {};
 
-INLINE_NESTED_INHERITED namespace nested_inherited {
-template <typename... Args>
-using Tuple = NestedInheritedTuple<Args...>;
-}
+template <typename First, typename... Rest>
+struct MemberTuple<First, Rest...> {
+  constexpr static bool is_member_tuple = true;
 
-#undef INLINE_MEMBER
-#undef INLINE_NESTED_INHERITED
+  template <typename FirstA, typename... RestA>
+  constexpr MemberTuple(FirstA&& arg1, RestA&&... args)
+      : arg_{std::forward<FirstA>(arg1)}, rest_{std::forward<RestA>(args)...} {}
+
+  constexpr MemberTuple() = default;
+  constexpr MemberTuple(MemberTuple&) = default;
+  constexpr MemberTuple(MemberTuple const&) = default;
+  constexpr MemberTuple(MemberTuple&&) = default;
+  MemberTuple& operator=(MemberTuple const&) = default;
+  MemberTuple& operator=(MemberTuple&&) = default;
+
+  First arg_;
+  MemberTuple<Rest...> rest_;
+};
+
+template <std::size_t I>
+struct MemberTupleGetHelper {
+  template <typename Tuple>
+  static constexpr WithRefMatching<TupleElementType<I, RemoveConstRef<Tuple>>,
+                                   Tuple>
+  get(Tuple&& tuple) noexcept {
+    return MemberTupleGetHelper<I - 1>::get(tuple.rest_);
+  }
+};
+
+template <>
+struct MemberTupleGetHelper<0> {
+  template <typename Tuple>
+  static constexpr WithRefMatching<TupleElementType<0, RemoveConstRef<Tuple>>,
+                                   Tuple>
+  get(Tuple&& tuple) noexcept {
+    return tuple.arg_;
+  }
+};
+
+template <std::size_t I, typename Tuple,
+          typename std::enable_if<RemoveConstRef<Tuple>::is_member_tuple, int>::type = 0>
+constexpr WithRefMatching<TupleElementType<I, RemoveConstRef<Tuple>>, Tuple>
+get(Tuple&& tuple) noexcept {
+  return MemberTupleGetHelper<I>::get(tuple);
+}
 
 }  // namespace acorn
 
-#endif  // ACORN_CONTAINER_TUPLE_H_
+#endif  // ACORN_CONTAINER_TUPLE_MEMBER_TUPLE_H_
