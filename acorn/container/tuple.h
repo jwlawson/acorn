@@ -31,6 +31,7 @@
 #ifndef ACORN_CONTAINER_TUPLE_H_
 #define ACORN_CONTAINER_TUPLE_H_
 
+#include "acorn/container/tuple/flat_inherited_tuple.h"
 #include "acorn/container/tuple/member_tuple.h"
 #include "acorn/container/tuple/nested_inherited_tuple.h"
 
@@ -45,23 +46,35 @@ namespace acorn {
 #ifdef ACORN_STANDARD_LAYOUT_TUPLE
 #define INLINE_MEMBER inline
 #define INLINE_NESTED_INHERITED
-#else
+#define INLINE_FLAT_INHERITED
+#elif ACORN_NESTED_LAYOUT_TUPLE
 #define INLINE_MEMBER
 #define INLINE_NESTED_INHERITED inline
+#define INLINE_FLAT_INHERITED
+#else
+#define INLINE_MEMBER
+#define INLINE_NESTED_INHERITED
+#define INLINE_FLAT_INHERITED inline
 #endif
 
 INLINE_MEMBER namespace member {
-template <typename... Args>
-using Tuple = MemberTuple<Args...>;
+  template <typename... Args>
+  using Tuple = MemberTuple<Args...>;
 }
 
 INLINE_NESTED_INHERITED namespace nested_inherited {
-template <typename... Args>
-using Tuple = NestedInheritedTuple<Args...>;
+  template <typename... Args>
+  using Tuple = NestedInheritedTuple<Args...>;
+}
+
+INLINE_FLAT_INHERITED namespace flat_inherited {
+  template <typename... Args>
+  using Tuple = FlatInheritedTuple<Args...>;
 }
 
 #undef INLINE_MEMBER
 #undef INLINE_NESTED_INHERITED
+#undef INLINE_FLAT_INHERITED
 
 }  // namespace acorn
 
