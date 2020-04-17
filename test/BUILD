@@ -47,3 +47,55 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "member_tuple",
+    size = "small",
+    srcs = ["tuple.cc"],
+    defines = ["ACORN_STANDARD_LAYOUT_TUPLE"],
+    deps = [
+        "//acorn/container:tuple",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "nested_inherited_tuple",
+    size = "small",
+    srcs = ["tuple.cc"],
+    defines = ["ACORN_NESTED_LAYOUT_TUPLE"],
+    deps = [
+        "//acorn/container:tuple",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "flat_inherited_tuple",
+    size = "small",
+    srcs = ["tuple.cc"],
+    deps = [
+        "//acorn/container:tuple",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "with_ref_matching",
+    size = "small",
+    srcs = ["with_ref_matching.cc"],
+    deps = [
+        "//acorn/traits",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "remove_const_ref",
+    size = "small",
+    srcs = ["remove_const_ref.cc"],
+    deps = [
+        "//acorn/traits",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

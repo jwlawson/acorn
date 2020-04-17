@@ -6,3 +6,13 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [],
 )
+
+cc_library(
+    name = "tuple",
+    srcs = ["tuple.h"] + glob(["tuple/*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//acorn/traits",
+        "@com_google_absl//absl/utility",
+    ],
+)
